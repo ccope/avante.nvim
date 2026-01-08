@@ -277,6 +277,44 @@ function M:build_headers()
   }
 end
 
+-- Helper function to check if a model supports reasoning features
+local function supports_reasoning(model)
+  if type(model) ~= "string" then return false end
+  
+  -- GPT-5, o1, Gemini 3, Claude 3.7 support reasoning
+  if model:match("gpt%-5") then return true end
+  if model:match("^o1") then return true end
+  if model:match("gemini%-3") then return true end
+  if model:match("claude%-3%.7") then return true end
+  
+  return false
+end
+
+-- Override parse_messages for Copilot to handle Gemini models
+-- Gemini models via Copilot Response API expect tool arguments as JSON objects, not strings
+function M:parse_messages(opts)
+  local messages = OpenAI.parse_messages(self, opts)
+  local provider_conf = Providers.parse_config(self)
+  local model = provider_conf.model
+  
+  -- Only apply transformation for Gemini models
+  if not (type(model) == "string" and model:match("gemini")) then
+    return messages
+  end
+  
+  -- Convert stringified arguments to objects for Gemini models
+  for _, message in ipairs(messages) do
+    if message.type == "function_call" and type(message.arguments) == "string" then
+      local ok, parsed = pcall(vim.json.decode, message.arguments)
+      if ok then
+        message.arguments = parsed
+      end
+    end
+  end
+  
+  return messages
+end
+
 function M:parse_curl_args(prompt_opts)
   -- refresh token synchronously, only if it has expired
   -- (this should rarely happen, as we refresh the token in the background)
@@ -344,10 +382,16 @@ function M:parse_curl_args(prompt_opts)
     end
     -- Response API doesn't use stream_options
     base_body.stream_options = nil
-    base_body.include = { "reasoning.encrypted_content" }
-    base_body.reasoning = {
-      summary = "detailed",
-    }
+    
+    -- Only include reasoning fields for models that support them
+    -- Supported models: GPT-5, o1, Gemini 3, Claude 3.7
+    if supports_reasoning(provider_conf.model) then
+      base_body.include = { "reasoning.encrypted_content" }
+      base_body.reasoning = {
+        summary = "detailed",
+      }
+    end
+    
     base_body.truncation = "disabled"
   else
     base_body.messages = parsed_messages
