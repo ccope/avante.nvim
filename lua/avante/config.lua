@@ -15,13 +15,14 @@ local function copilot_use_response_api(opts)
 
   -- Gemini models (1.5, 2.0, 3.x) require Response API
   -- Note: gemini-[123] matches single digit versions, additional patterns needed for decimals
+  -- gemini-2. matches all 2.x versions (e.g., 2.0, 2.1) for future compatibility
   if model:match("gemini%-[123]") or model:match("gemini%-1%.5") or model:match("gemini%-2%.") then return true end
 
   -- Claude 3.5 and 3.7 models require Response API
   if model:match("claude%-3%.[57]") then return true end
 
-  -- o1 models require Response API
-  if model:match("^o1") then return true end
+  -- o1 models require Response API (matches o1, o1-mini, o1-preview, etc.)
+  if model:match("^o1$") or model:match("^o1%-") then return true end
 
   return false
 end

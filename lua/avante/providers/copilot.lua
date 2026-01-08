@@ -284,8 +284,8 @@ local function supports_reasoning(model)
 
   -- GPT-5 Codex models support reasoning
   if model:match("gpt%-5%-codex") then return true end
-  -- o1 models support reasoning
-  if model:match("^o1") then return true end
+  -- o1 models support reasoning (matches o1, o1-mini, o1-preview, etc.)
+  if model:match("^o1$") or model:match("^o1%-") then return true end
   -- Gemini 3.x models support reasoning
   if model:match("gemini%-3") then return true end
   -- Claude 3.7 models support reasoning
@@ -305,6 +305,7 @@ function M:parse_messages(opts)
   if not (type(model) == "string" and model:match("gemini")) then return messages end
 
   -- Convert stringified arguments to objects for Gemini models
+  -- Note: Response API uses message.type = "function_call" with arguments field (see openai.lua:220)
   for _, message in ipairs(messages) do
     if message.type == "function_call" and type(message.arguments) == "string" then
       local ok, parsed = pcall(vim.json.decode, message.arguments)
