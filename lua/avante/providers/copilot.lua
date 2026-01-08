@@ -278,13 +278,17 @@ function M:build_headers()
 end
 
 -- Helper function to check if a model supports reasoning features
+-- Only models that explicitly support reasoning tokens should return true
 local function supports_reasoning(model)
   if type(model) ~= "string" then return false end
 
-  -- GPT-5, o1, Gemini 3, Claude 3.7 support reasoning
-  if model:match("gpt%-5") then return true end
+  -- GPT-5 Codex models support reasoning
+  if model:match("gpt%-5%-codex") then return true end
+  -- o1 models support reasoning
   if model:match("^o1") then return true end
+  -- Gemini 3.x models support reasoning
   if model:match("gemini%-3") then return true end
+  -- Claude 3.7 models support reasoning
   if model:match("claude%-3%.7") then return true end
 
   return false

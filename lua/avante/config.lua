@@ -14,10 +14,10 @@ local function copilot_use_response_api(opts)
   if model:match("gpt%-5%-codex") then return true end
 
   -- Gemini models (1.5, 2.0, 3.x) require Response API
-  if model:match("gemini%-1%.5") or model:match("gemini%-2") or model:match("gemini%-3") then return true end
+  if model:match("gemini%-[123]") or model:match("gemini%-1%.5") or model:match("gemini%-2%.") then return true end
 
   -- Claude 3.5 and 3.7 models require Response API
-  if model:match("claude%-3%.5") or model:match("claude%-3%.7") then return true end
+  if model:match("claude%-3%.[57]") then return true end
 
   -- o1 models require Response API
   if model:match("^o1") then return true end
