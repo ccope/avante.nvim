@@ -286,10 +286,10 @@ local function supports_reasoning(model)
   if model:match("gpt%-5%-codex") then return true end
   -- o1 models support reasoning (matches o1, o1-mini, o1-preview, etc.)
   if model:match("^o1$") or model:match("^o1%-") then return true end
-  -- Gemini 3.x models support reasoning (Gemini 1.5/2.x do NOT support reasoning)
-  if model:match("gemini%-3") then return true end
-  -- Claude 3.7 models support reasoning
-  if model:match("claude%-3%.7") then return true end
+  -- Gemini 3+ models support reasoning (matches gemini-3, gemini-3.x, gemini-4+, etc.)
+  if model:match("gemini%-[3-9]") or model:match("gemini%-[1-9]%d+") then return true end
+  -- Claude 3.7+ models support reasoning (matches claude-3.7+, claude-4+, etc.)
+  if model:match("claude%-3%.([7-9])") or model:match("claude%-[4-9]") or model:match("claude%-[1-9]%d+") then return true end
 
   return false
 end
