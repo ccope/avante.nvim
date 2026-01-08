@@ -286,7 +286,7 @@ local function supports_reasoning(model)
   if model:match("gpt%-5%-codex") then return true end
   -- o1 models support reasoning (matches o1, o1-mini, o1-preview, etc.)
   if model:match("^o1$") or model:match("^o1%-") then return true end
-  -- Gemini 3.x models support reasoning
+  -- Gemini 3.x models support reasoning (Gemini 1.5/2.x do NOT support reasoning)
   if model:match("gemini%-3") then return true end
   -- Claude 3.7 models support reasoning
   if model:match("claude%-3%.7") then return true end
@@ -302,7 +302,8 @@ function M:parse_messages(opts)
   local model = provider_conf.model
 
   -- Only apply transformation for Gemini models
-  if not (type(model) == "string" and model:match("gemini")) then return messages end
+  -- Using broad pattern to catch all Gemini versions (1.5, 2.x, 3.x all need this transformation)
+  if not (type(model) == "string" and model:match("gemini%-")) then return messages end
 
   -- Convert stringified arguments to objects for Gemini models
   -- Note: Response API uses message.type = "function_call" with arguments field (see openai.lua:220)
