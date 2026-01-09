@@ -13,11 +13,6 @@ local function copilot_use_response_api(opts)
   -- GPT-5 Codex models require Response API
   if model:match("gpt%-5%-codex") then return true end
 
-  -- Gemini models (1.5, 2.0, 3.x) require Response API
-  -- Note: Check specific decimal versions first, then single-digit versions
-  -- gemini-2. matches all 2.x versions (e.g., 2.0, 2.1) for future compatibility
-  if model:match("gemini%-1%.5") or model:match("gemini%-2%.") or model:match("gemini%-[123]") then return true end
-
   -- Claude 3.5 and 3.7 models require Response API
   if model:match("claude%-3%.[57]") then return true end
 

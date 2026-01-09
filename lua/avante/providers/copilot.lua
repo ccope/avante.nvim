@@ -286,35 +286,10 @@ local function supports_reasoning(model)
   if model:match("gpt%-5%-codex") then return true end
   -- o1 models support reasoning (matches o1, o1-mini, o1-preview, etc.)
   if model:match("^o1$") or model:match("^o1%-") then return true end
-  -- Gemini 3+ models support reasoning (matches gemini-3, gemini-3.x, gemini-4+, etc.)
-  if model:match("gemini%-[3-9]") or model:match("gemini%-[1-9]%d+") then return true end
   -- Claude 3.7+ models support reasoning (matches claude-3.7+, claude-4+, etc.)
   if model:match("claude%-3%.([7-9])") or model:match("claude%-[4-9]") or model:match("claude%-[1-9]%d+") then return true end
 
   return false
-end
-
--- Override parse_messages for Copilot to handle Gemini models
--- Gemini models via Copilot Response API expect tool arguments as JSON objects, not strings
-function M:parse_messages(opts)
-  local messages = OpenAI.parse_messages(self, opts)
-  local provider_conf = Providers.parse_config(self)
-  local model = provider_conf.model
-
-  -- Only apply transformation for Gemini models
-  -- Using broad pattern to catch all Gemini versions (1.5, 2.x, 3.x all need this transformation)
-  if not (type(model) == "string" and model:match("gemini%-")) then return messages end
-
-  -- Convert stringified arguments to objects for Gemini models
-  -- Note: Response API uses message.type = "function_call" with arguments field (see openai.lua:220)
-  for _, message in ipairs(messages) do
-    if message.type == "function_call" and type(message.arguments) == "string" then
-      local ok, parsed = pcall(vim.json.decode, message.arguments)
-      if ok then message.arguments = parsed end
-    end
-  end
-
-  return messages
 end
 
 function M:parse_curl_args(prompt_opts)
