@@ -8,7 +8,18 @@ local Utils = require("avante.utils")
 
 local function copilot_use_response_api(opts)
   local model = opts and opts.model
-  return type(model) == "string" and model:match("gpt%-5%-codex") ~= nil
+  if type(model) ~= "string" then return false end
+
+  -- GPT-5 Codex models require Response API
+  if model:match("gpt%-5%-codex") then return true end
+
+  -- Claude 3.5 and 3.7 models require Response API
+  if model:match("claude%-3%.[57]") then return true end
+
+  -- o1 models require Response API (matches o1, o1-mini, o1-preview, etc.)
+  if model:match("^o1$") or model:match("^o1%-") then return true end
+
+  return false
 end
 
 ---@class avante.file_selector.IParams

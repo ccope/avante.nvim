@@ -277,6 +277,21 @@ function M:build_headers()
   }
 end
 
+-- Helper function to check if a model supports reasoning features
+-- Only models that explicitly support reasoning tokens should return true
+local function supports_reasoning(model)
+  if type(model) ~= "string" then return false end
+
+  -- GPT-5 Codex models support reasoning
+  if model:match("gpt%-5%-codex") then return true end
+  -- o1 models support reasoning (matches o1, o1-mini, o1-preview, etc.)
+  if model:match("^o1$") or model:match("^o1%-") then return true end
+  -- Claude 3.7+ models support reasoning (matches claude-3.7+, claude-4+, etc.)
+  if model:match("claude%-3%.([7-9])") or model:match("claude%-[4-9]") or model:match("claude%-[1-9]%d+") then return true end
+
+  return false
+end
+
 function M:parse_curl_args(prompt_opts)
   -- refresh token synchronously, only if it has expired
   -- (this should rarely happen, as we refresh the token in the background)
@@ -344,10 +359,16 @@ function M:parse_curl_args(prompt_opts)
     end
     -- Response API doesn't use stream_options
     base_body.stream_options = nil
-    base_body.include = { "reasoning.encrypted_content" }
-    base_body.reasoning = {
-      summary = "detailed",
-    }
+
+    -- Only include reasoning fields for models that support them
+    -- Supported models: GPT-5, o1, Gemini 3, Claude 3.7
+    if supports_reasoning(provider_conf.model) then
+      base_body.include = { "reasoning.encrypted_content" }
+      base_body.reasoning = {
+        summary = "detailed",
+      }
+    end
+
     base_body.truncation = "disabled"
   else
     base_body.messages = parsed_messages
